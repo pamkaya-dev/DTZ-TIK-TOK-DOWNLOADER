@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DTZ TikTok Downloader</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',Arial,sans-serif}
+body{
+  background:#050505;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:#e5e7eb;
+  position:relative;
+  overflow:hidden;
+}
+
+/* Bubbles */
+.bubble{
+  position:absolute;
+  bottom:0;
+  border-radius:50%;
+  background:#00f2ff;
+  opacity:.6;
+  animation:floatUp linear forwards;
+}
+@keyframes floatUp{
+  0%{transform:translateY(0) scale(.5);opacity:.3}
+  50%{opacity:.8}
+  100%{transform:translateY(-150vh) scale(1);opacity:0}
+}
+
+.container{
+  max-width:700px;
+  width:100%;
+  padding:20px;
+  text-align:center;
+  position:relative;
+  z-index:1;
+}
+
+h1{color:#22f2ff;margin-bottom:20px}
+
+input{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:none;
+  outline:none;
+  margin-bottom:14px;
+  font-size:16px;
+}
+
+button{
+  padding:12px 25px;
+  background:#00f2ff;
+  border:none;
+  border-radius:14px;
+  font-weight:600;
+  color:#fff;
+  cursor:pointer;
+  box-shadow:0 0 15px #00f2ff;
+}
+button:hover{
+  background:#000;
+  color:#00f2ff;
+  box-shadow:0 0 30px #00f2ff;
+}
+
+#notice{
+  margin:18px auto;
+  padding:14px;
+  font-size:14px;
+  color:#aaf2fb;
+  background:#0b0b0b;
+  border-radius:16px;
+}
+
+.box{
+  margin:20px auto;
+  padding:24px;
+  background:#0b0b0b;
+  border-radius:18px;
+}
+
+.box h2{color:#00f2ff;margin-bottom:12px}
+
+.download-btn{
+  display:block;
+  margin:8px auto;
+  padding:10px;
+  background:#00f2ff;
+  color:#fff;
+  border-radius:10px;
+  text-decoration:none;
+  font-weight:bold;
+  width:200px;
+}
+.download-btn:hover{
+  background:#000;
+  color:#00f2ff;
+  box-shadow:0 0 15px #00f2ff;
+}
+
+#thumbnail{
+  display:none;
+  max-width:100%;
+  border-radius:14px;
+  margin:18px auto;
+}
+
+/* Loading */
+#loadingOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.9);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  z-index:99;
+}
+.spinner{
+  width:60px;
+  height:60px;
+  border:6px solid #333;
+  border-top:6px solid #00f2ff;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Language popup with animation */
+#langPopup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.95);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  z-index:100;
+}
+
+#langPopup h2{
+  color:#111;
+  font-size:28px;
+  margin-bottom:50px;
+  opacity:0;
+  animation: fadeDown 1s ease-out forwards;
+}
+
+.lang-btn{
+  padding:16px 50px;
+  margin:0 20px;
+  font-size:20px;
+  font-weight:bold;
+  background:#00f2ff;
+  color:#000 !important; /* කලු පාට text */
+  border:none;
+  border-radius:16px;
+  cursor:pointer;
+  opacity:0;
+  box-shadow:0 0 20px #00f2ff;
+}
+
+#btn-si{
+  animation: slideFromLeft 1s ease-out 0.5s forwards;
+}
+
+#btn-en{
+  animation: slideFromRight 1s ease-out 0.5s forwards;
+}
+
+@keyframes fadeDown{
+  from{
+    opacity:0;
+    transform:translateY(-50px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@keyframes slideFromLeft{
+  from{
+    opacity:0;
+    transform:translateX(-100px);
+  }
+  to{
+    opacity:1;
+    transform:translateX(0);
+  }
+}
+
+@keyframes slideFromRight{
+  from{
+    opacity:0;
+    transform:translateX(100px);
+  }
+  to{
+    opacity:1;
+    transform:translateX(0);
+  }
+}
+
+.lang-container{
+  display:flex;
+  justify-content:center;
+}
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p id="loadingText">Loading...</p>
+</div>
+
+<div id="langPopup">
+  <h2>භාෂාව තෝරන්න / Select Language</h2>
+  <div class="lang-container">
+    <button id="btn-si" class="lang-btn" onclick="setLang('si')">සිංහල</button>
+    <button id="btn-en" class="lang-btn" onclick="setLang('en')">English</button>
+  </div>
+</div>
+
+<div class="container">
+  <h1 id="mainTitle">🎬 DTZ TIKTOK DOWNLOADER</h1>
+
+  <input id="yturl" placeholder="Paste TikTok link here">
+  <button id="downloadBtn" onclick="fetchVideo()">DOWNLOAD</button>
+
+  <div id="notice">
+    After clicking Download, it will open in a new tab. Use the ⋮ menu below the video to download.
+  </div>
+
+  <h3 id="videoTitle"></h3>
+  <img id="thumbnail">
+
+  <div id="resultArea" style="display:none">
+    <div class="box">
+      <h2 id="videoHeading">📹 VIDEO</h2>
+      <div id="videoList"></div>
+    </div>
+    <div class="box">
+      <h2 id="audioHeading">🎵 AUDIO</h2>
+      <div id="audioList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Bubbles animation
+function createBubble(){
+  const b=document.createElement('div');
+  b.className='bubble';
+  const s=Math.random()*8+4;
+  b.style.width=b.style.height=s+'px';
+  b.style.left=Math.random()*100+'%';
+  b.style.animationDuration=(Math.random()*2+2)+'s';
+  document.body.appendChild(b);
+  setTimeout(()=>b.remove(),4000);
+}
+setInterval(createBubble,25);
+
+// Language texts
+const texts = {
+  en: {
+    mainTitle: "🎬 DTZ TIKTOK DOWNLOADER",
+    placeholder: "Paste TikTok link here",
+    downloadBtn: "DOWNLOAD",
+    notice: "After clicking Download, it will open in a new tab. Use the ⋮ menu below the video to download.",
+    videoHeading: "📹 VIDEO",
+    audioHeading: "🎵 AUDIO",
+    loading: "Loading...",
+    errorTitle: "Error fetching data",
+    defaultTitle: "TikTok Video"
+  },
+  si: {
+    mainTitle: "🎬 DTZ TIKTOK DOWNLOADER",
+    placeholder: "TikTok link එක paste කරන්න",
+    downloadBtn: "ඩවුන්ලෝඩ්",
+    notice: "Download click කළාම new tab එකක ඕපන් වෙනවා. Video එක යට තියෙන ⋮ menu එකෙන් download කරගන්න.",
+    videoHeading: "📹 වීඩියෝ",
+    audioHeading: "🎵 ඕඩියෝ",
+    loading: "ලෝඩ් වෙමින්...",
+    errorTitle: "ඩේටා ගැනීමේ ගැටලුවක්",
+    defaultTitle: "TikTok වීඩියෝ"
+  }
+};
+
+let lang = 'en';
+
+function setLang(l){
+  lang = l;
+  document.getElementById('langPopup').style.display = 'none';
+  
+  document.getElementById('mainTitle').innerText = texts[lang].mainTitle;
+  document.getElementById('yturl').placeholder = texts[lang].placeholder;
+  document.getElementById('downloadBtn').innerText = texts[lang].downloadBtn;
+  document.getElementById('notice').innerText = texts[lang].notice;
+  document.getElementById('videoHeading').innerText = texts[lang].videoHeading;
+  document.getElementById('audioHeading').innerText = texts[lang].audioHeading;
+  document.getElementById('loadingText').innerText = texts[lang].loading;
+}
+
+function showLoading(){
+  document.getElementById('loadingOverlay').style.display = 'flex';
+}
+function hideLoading(){
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+async function fetchVideo(){
+  const link = document.getElementById('yturl').value.trim();
+  if(!link) return alert(lang === 'si' ? "TikTok link එක paste කරන්න" : "Please paste a TikTok link");
+
+  showLoading();
+  document.getElementById('resultArea').style.display = 'none';
+  document.getElementById('videoList').innerHTML = '';
+  document.getElementById('audioList').innerHTML = '';
+  document.getElementById('thumbnail').style.display = 'none';
+  document.getElementById('videoTitle').innerText = texts[lang].loading;
+
+  try{
+    const api = `https://api.bk9.dev/download/tiktok3?url=${encodeURIComponent(link)}`;
+    const res = await fetch(api);
+    const json = await res.json();
+
+    if(!json.status) throw "error";
+
+    const data = json.BK9;
+    document.getElementById('videoTitle').innerText = data.title || texts[lang].defaultTitle;
+
+    if(data.thumbnail){
+      document.getElementById('thumbnail').src = data.thumbnail;
+      document.getElementById('thumbnail').style.display = 'block';
+    }
+
+    const videos = data.formats.filter(f => f.has_video || f.quality.includes('video'));
+    videos.forEach(v => {
+      const btn = document.createElement('a');
+      btn.className = 'download-btn';
+      btn.href = v.url;
+      btn.target = '_blank';
+      btn.innerText = v.quality.replace(/_/g, ' ').toUpperCase() || 'VIDEO';
+      document.getElementById('videoList').appendChild(btn);
+    });
+
+    const audios = data.formats.filter(f => f.quality === 'audio' || !f.has_video);
+    audios.forEach(a => {
+      const btn = document.createElement('a');
+      btn.className = 'download-btn';
+      btn.href = a.url;
+      btn.target = '_blank';
+      btn.innerText = 'AUDIO MP3';
+      document.getElementById('audioList').appendChild(btn);
+    });
+
+    document.getElementById('resultArea').style.display = 'block';
+  } catch(e){
+    document.getElementById('videoTitle').innerText = texts[lang].errorTitle;
+  }
+  hideLoading();
+}
+</script>
+</body>
+</html>
