@@ -16,6 +16,7 @@ body{
   align-items:center;
   color:#e5e7eb;
   position:relative;
+  overflow-x:hidden; /* prevent horizontal scroll */
 }
 
 /* Bubbles */
@@ -106,13 +107,13 @@ button:hover{
 }
 
 #thumbnail{
-  display:none;
   max-width:100%;
   border-radius:14px;
   margin:18px auto;
+  display:none; /* initially hidden */
 }
 
-/* Loading */
+/* Loading Overlay */
 #loadingOverlay{
   position:fixed;
   inset:0;
@@ -133,7 +134,7 @@ button:hover{
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Language popup with animation */
+/* Language popup */
 #langPopup{
   position:fixed;
   inset:0;
@@ -159,7 +160,7 @@ button:hover{
   font-size:20px;
   font-weight:bold;
   background:#00f2ff;
-  color:#000 !important; /* කලු පාට text */
+  color:#000 !important;
   border:none;
   border-radius:16px;
   cursor:pointer;
@@ -167,51 +168,23 @@ button:hover{
   box-shadow:0 0 20px #00f2ff;
 }
 
-#btn-si{
-  animation: slideFromLeft 1s ease-out 0.5s forwards;
-}
-
-#btn-en{
-  animation: slideFromRight 1s ease-out 0.5s forwards;
-}
+#btn-si{animation: slideFromLeft 1s ease-out 0.5s forwards;}
+#btn-en{animation: slideFromRight 1s ease-out 0.5s forwards;}
 
 @keyframes fadeDown{
-  from{
-    opacity:0;
-    transform:translateY(-50px);
-  }
-  to{
-    opacity:1;
-    transform:translateY(0);
-  }
+  from{opacity:0;transform:translateY(-50px);}
+  to{opacity:1;transform:translateY(0);}
 }
-
 @keyframes slideFromLeft{
-  from{
-    opacity:0;
-    transform:translateX(-100px);
-  }
-  to{
-    opacity:1;
-    transform:translateX(0);
-  }
+  from{opacity:0;transform:translateX(-100px);}
+  to{opacity:1;transform:translateX(0);}
 }
-
 @keyframes slideFromRight{
-  from{
-    opacity:0;
-    transform:translateX(100px);
-  }
-  to{
-    opacity:1;
-    transform:translateX(0);
-  }
+  from{opacity:0;transform:translateX(100px);}
+  to{opacity:1;transform:translateX(0);}
 }
 
-.lang-container{
-  display:flex;
-  justify-content:center;
-}
+.lang-container{display:flex;justify-content:center;}
 </style>
 </head>
 <body>
@@ -240,7 +213,7 @@ button:hover{
   </div>
 
   <h3 id="videoTitle"></h3>
-  <img id="thumbnail">
+  <img id="thumbnail" alt="Video thumbnail">
 
   <div id="resultArea" style="display:none">
     <div class="box">
@@ -257,16 +230,16 @@ button:hover{
 <script>
 // Bubbles animation
 function createBubble(){
-  const b=document.createElement('div');
-  b.className='bubble';
-  const s=Math.random()*8+4;
-  b.style.width=b.style.height=s+'px';
-  b.style.left=Math.random()*100+'%';
-  b.style.animationDuration=(Math.random()*2+2)+'s';
+  const b = document.createElement('div');
+  b.className = 'bubble';
+  const s = Math.random() * 8 + 4;
+  b.style.width = b.style.height = s + 'px';
+  b.style.left = Math.random() * 100 + '%';
+  b.style.animationDuration = (Math.random() * 2 + 2) + 's';
   document.body.appendChild(b);
-  setTimeout(()=>b.remove(),4000);
+  setTimeout(() => b.remove(), 5000);
 }
-setInterval(createBubble,25);
+setInterval(createBubble, 25);
 
 // Language texts
 const texts = {
@@ -321,6 +294,7 @@ async function fetchVideo(){
   if(!link) return alert(lang === 'si' ? "TikTok link එක paste කරන්න" : "Please paste a TikTok link");
 
   showLoading();
+  // Reset UI
   document.getElementById('resultArea').style.display = 'none';
   document.getElementById('videoList').innerHTML = '';
   document.getElementById('audioList').innerHTML = '';
@@ -330,18 +304,34 @@ async function fetchVideo(){
   try{
     const api = `https://api.bk9.dev/download/tiktok3?url=${encodeURIComponent(link)}`;
     const res = await fetch(api);
+    
+    if (!res.ok) throw new Error('Network response was not ok');
+    
     const json = await res.json();
 
-    if(!json.status) throw "error";
+    if(!json.status) throw new Error('API returned status false');
 
     const data = json.BK9;
+
+    // Video title
     document.getElementById('videoTitle').innerText = data.title || texts[lang].defaultTitle;
 
+    // Thumbnail with error handling
     if(data.thumbnail){
-      document.getElementById('thumbnail').src = data.thumbnail;
-      document.getElementById('thumbnail').style.display = 'block';
+      const thumbImg = document.getElementById('thumbnail');
+      thumbImg.src = data.thumbnail;
+      thumbImg.style.display = 'block';
+      
+      thumbImg.onload = () => {
+        console.log('Thumbnail loaded successfully');
+      };
+      thumbImg.onerror = () => {
+        console.log('Thumbnail failed to load');
+        thumbImg.style.display = 'none';
+      };
     }
 
+    // Video links
     const videos = data.formats.filter(f => f.has_video || f.quality.includes('video'));
     videos.forEach(v => {
       const btn = document.createElement('a');
@@ -352,6 +342,7 @@ async function fetchVideo(){
       document.getElementById('videoList').appendChild(btn);
     });
 
+    // Audio links
     const audios = data.formats.filter(f => f.quality === 'audio' || !f.has_video);
     audios.forEach(a => {
       const btn = document.createElement('a');
@@ -363,10 +354,14 @@ async function fetchVideo(){
     });
 
     document.getElementById('resultArea').style.display = 'block';
+
   } catch(e){
+    console.error('Error:', e);
     document.getElementById('videoTitle').innerText = texts[lang].errorTitle;
+    alert(lang === 'si' ? 'ගැටලුවක් ඇති වුණා. TikTok link එක නිවැරදිද කියලා check කරන්න.' : 'An error occurred. Please check if the TikTok link is correct.');
+  } finally {
+    hideLoading(); // Always hide loading overlay
   }
-  hideLoading();
 }
 </script>
 </body>
