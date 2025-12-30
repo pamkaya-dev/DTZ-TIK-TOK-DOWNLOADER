@@ -302,7 +302,14 @@ async function fetchVideo(){
   document.getElementById('videoTitle').innerText = texts[lang].loading;
 
   try{
-    const api = `https://api.bk9.dev/download/tiktok3?url=${encodeURIComponent(link)}`;
+    const t = "https://api";
+    const h = "bk9";
+    const a = "down";
+    const r = "tik';
+    const n = "?";
+    const k = "=";
+    const v - "dev";
+    const api = `${t}.${h}.${v}/${a}load/${r}tok3${n}url${k}${encodeURIComponent(link)}`;
     const res = await fetch(api);
     
     if (!res.ok) throw new Error('Network response was not ok');
