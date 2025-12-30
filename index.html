@@ -320,10 +320,10 @@ async function fetchVideo(){
 
     const data = json.BK9;
 
-    // Video title
+    
     document.getElementById('videoTitle').innerText = data.title || texts[lang].defaultTitle;
 
-    // Thumbnail with error handling
+    // Thumbnail 
     if(data.thumbnail){
       const thumbImg = document.getElementById('thumbnail');
       thumbImg.src = data.thumbnail;
